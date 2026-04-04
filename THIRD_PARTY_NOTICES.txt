@@ -1,0 +1,38 @@
+THIRD PARTY NOTICES AND INFORMATION
+
+This software ("Universal Code Storyteller") incorporates or utilizes the 
+following third-party software components. These components are provided 
+under their respective licenses.
+
+---------------------------------------------------------------------------
+1. Component: Blockly
+   Author: Google LLC
+   License: Apache License 2.0
+   Source: https://github.com/google/blockly
+   
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at:
+   http://www.apache.org/licenses/LICENSE-2.0
+
+2. Component: Tree-sitter (Core Library)
+   Author: Max Brunsfeld
+   License: MIT License
+   Source: https://github.com/tree-sitter/tree-sitter
+
+   Copyright (c) 2018 Max Brunsfeld
+   Permission is hereby granted, free of charge, to any person obtaining a 
+   copy of this software and associated documentation files... (Standard MIT)
+
+3. Component: Tree-sitter Language Grammars
+   (JavaScript, Python, Go, Rust, Java, C++, PHP, Ruby, C#, TypeScript)
+   License: MIT / Apache 2.0
+   Source: Various (Maintained by Tree-sitter Community)
+
+4. Component: Web Tree-sitter (WASM Binding)
+   License: MIT License
+   Source: https://www.npmjs.com/package/web-tree-sitter
+
+---------------------------------------------------------------------------
+Note: All minified JavaScript files and WASM binaries pulled from UNPKG 
+or other CDNs retain their original headers and license information.
