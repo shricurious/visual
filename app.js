@@ -86,10 +86,9 @@ async function init() {
     defineBlocks();
 
     try {
-        // 2. Point Core WASM to JSDelivr
+        // 2. Point Core WASM to JSDelivr's reliable CDN
         await TreeSitter.init({
             locateFile(scriptName) {
-                // JSDelivr is more reliable for the core .wasm file headers
                 return `https://cdn.jsdelivr.net/npm/web-tree-sitter@0.20.3/${scriptName}`;
             }
         });
@@ -100,7 +99,7 @@ async function init() {
         await loadLanguage('javascript');
 
     } catch (e) {
-        console.error("Tree-sitter Engine Failed to Load:", e);
+        console.error("Tree-sitter Engine Failed:", e);
         document.getElementById('status').innerText = "❌ Engine Error (CORS)";
     }
 }
