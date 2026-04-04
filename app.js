@@ -6,45 +6,49 @@
 
 let parser, workspace;
 let updatedTabs = new Set();
-const WASM_BASE_URL = "https://unpkg.com/";
+const WASM_BASE_URL = "https://unpkg.com/@emmetio/tree-sitter-languages/wasm/";
 
-// Expanded Language Map (10 Main Languages)
 const languageMap = {
-    'javascript': 'tree-sitter-javascript@0.20.1/tree-sitter-javascript.wasm',
-    'python': 'tree-sitter-python@0.20.2/tree-sitter-python.wasm',
-    'java': 'tree-sitter-java@0.20.0/tree-sitter-java.wasm',
-    'cpp': 'tree-sitter-cpp@0.20.0/tree-sitter-cpp.wasm',
-    'go': 'tree-sitter-go@0.20.0/tree-sitter-go.wasm',
-    'ruby': 'tree-sitter-ruby@0.20.0/tree-sitter-ruby.wasm',
-    'rust': 'tree-sitter-rust@0.20.3/tree-sitter-rust.wasm',
-    'php': 'tree-sitter-php@0.19.0/tree-sitter-php.wasm',
-    'csharp': 'tree-sitter-c-sharp@0.20.0/tree-sitter-c-sharp.wasm',
-    'typescript': 'tree-sitter-typescript@0.20.1/tree-sitter-typescript.wasm'
+    'javascript': 'tree-sitter-javascript.wasm',
+    'python': 'tree-sitter-python.wasm',
+    'java': 'tree-sitter-java.wasm',
+    'cpp': 'tree-sitter-cpp.wasm',
+    'go': 'tree-sitter-go.wasm',
+    'ruby': 'tree-sitter-ruby.wasm',
+    'rust': 'tree-sitter-rust.wasm',
+    'php': 'tree-sitter-php.wasm',
+    'csharp': 'tree-sitter-c_sharp.wasm',
+    'typescript': 'tree-sitter-typescript.wasm'
 };
 
 async function loadLanguage(langKey) {
     const statusEl = document.getElementById('status');
     statusEl.innerText = `⏳ Loading ${langKey}...`;
-    statusEl.className = "status-badge";
 
     try {
-        // Load the WASM binary from the CDN
         const url = WASM_BASE_URL + languageMap[langKey];
-        const Language = await TreeSitter.Language.load(url);
+        
+        // Use 'anonymous' credentials mode to satisfy strict CDN policies
+        const response = await fetch(url, {
+            method: 'GET',
+            mode: 'cors',
+            credentials: 'omit' 
+        });
+
+        if (!response.ok) throw new Error(`Could not reach CDN: ${response.status}`);
+        
+        const buffer = await response.arrayBuffer();
+        // Load the binary into the Tree-sitter parser
+        const Language = await TreeSitter.Language.load(new Uint8Array(buffer));
         
         parser.setLanguage(Language);
         
         statusEl.innerText = `✅ ${langKey.toUpperCase()} Ready`;
         statusEl.className = "status-badge ready";
-        
-        // Clear the cache so the next tab click triggers a fresh parse
         updatedTabs.clear(); 
-        updatedTabs.add('tab-source'); 
-        
-        console.log(`Switched engine to: ${langKey}`);
     } catch (e) {
-        console.error(`Error loading WASM for ${langKey}:`, e);
-        statusEl.innerText = `❌ Error: ${langKey}`;
+        console.error(`CORS Fail on ${langKey}:`, e);
+        statusEl.innerText = `❌ CDN Blocked: ${langKey}`;
         statusEl.className = "status-badge error";
     }
 }
