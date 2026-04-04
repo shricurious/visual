@@ -79,33 +79,29 @@ function changeTargetLanguage(val) {
  * INITIALIZATION
  */
 async function init() {
-    // 1. Setup Blockly Workspace
+    // 1. Setup Blockly
     workspace = Blockly.inject('blocklyDiv', {
-        toolbox: false, 
-        scrollbars: true, 
-        collapse: true, 
-        readOnly: false,
-        move: { scrollbars: true, drag: true, wheel: true },
-        zoom: { controls: true, wheel: true, startScale: 1.0 }
+        toolbox: false, scrollbars: true, collapse: true, readOnly: false,
+        move: { scrollbars: true, drag: true, wheel: true }
     });
-
-    // 2. Define the Blocks and their Reverse Generators
     defineBlocks();
 
-    // 3. Setup Tree-sitter
     try {
-        await TreeSitter.init();
+        // 2. Setup Tree-sitter Core (Point to CDN for the .wasm file)
+        await TreeSitter.init({
+            locateFile(scriptName) {
+                return `https://unpkg.com/web-tree-sitter@0.20.1/${scriptName}`;
+            }
+        });
+
         parser = new TreeSitter();
-        // Load the local v14 grammar file
-        const JavaScript = await TreeSitter.Language.load('tree-sitter-javascript.wasm');
-        parser.setLanguage(JavaScript);
         
-        const statusEl = document.getElementById('status');
-        statusEl.innerText = "✅ Systems Ready";
-        statusEl.className = "status-badge ready";
+        // 3. Load default language (JavaScript)
+        await loadLanguage('javascript');
+
     } catch (e) {
-        console.error("Initialization Failed:", e);
-        document.getElementById('status').innerText = "❌ WASM Load Error";
+        console.error("Tree-sitter Initialization Failed:", e);
+        document.getElementById('status').innerText = "❌ Core Load Error";
     }
 }
 
