@@ -79,29 +79,29 @@ function changeTargetLanguage(val) {
  * INITIALIZATION
  */
 async function init() {
-    // 1. Setup Blockly
+    // 1. Setup Blockly (Keep your existing code)
     workspace = Blockly.inject('blocklyDiv', {
-        toolbox: false, scrollbars: true, collapse: true, readOnly: false,
-        move: { scrollbars: true, drag: true, wheel: true }
+        toolbox: false, scrollbars: true, collapse: true, readOnly: false
     });
     defineBlocks();
 
     try {
-        // 2. Setup Tree-sitter Core (Point to CDN for the .wasm file)
+        // 2. Point Core WASM to JSDelivr
         await TreeSitter.init({
             locateFile(scriptName) {
-                return `https://unpkg.com/web-tree-sitter@0.20.1/${scriptName}`;
+                // JSDelivr is more reliable for the core .wasm file headers
+                return `https://cdn.jsdelivr.net/npm/web-tree-sitter@0.20.3/${scriptName}`;
             }
         });
 
         parser = new TreeSitter();
         
-        // 3. Load default language (JavaScript)
+        // 3. Load your default language
         await loadLanguage('javascript');
 
     } catch (e) {
-        console.error("Tree-sitter Initialization Failed:", e);
-        document.getElementById('status').innerText = "❌ Core Load Error";
+        console.error("Tree-sitter Engine Failed to Load:", e);
+        document.getElementById('status').innerText = "❌ Engine Error (CORS)";
     }
 }
 
