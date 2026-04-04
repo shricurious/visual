@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Universal Code Storyteller</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/web-tree-sitter@0.20.8/tree-sitter.js"></script>
+    <script src="https://unpkg.com/blockly/blockly.min.js"></script>
+    
+    <script src="https://unpkg.com/blockly/javascript_compressed.js"></script>
+    <script src="https://unpkg.com/blockly/python_compressed.js"></script>
+    <script src="https://unpkg.com/blockly/php_compressed.js"></script>
+    <script src="https://unpkg.com/blockly/lua_compressed.js"></script>
+    <script src="https://unpkg.com/blockly/dart_compressed.js"></script>
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header>
+    <div class="brand">
+        <h1>Universal Code Storyteller</h1>
+    </div>
+    <div id="status" class="status-badge">Initializing...</div>
+</header>
+
+<div class="tab-container">
+    <nav class="tabs">
+        <div class="tab-group">
+            <button class="tab-btn active" onclick="openTab(event, 'tab-source')">1. Source</button>
+            <select id="srcLang" onchange="changeSourceLanguage(this.value)">
+                <option value="javascript">JavaScript</option>
+                <option value="typescript">TypeScript</option>
+                <option value="python">Python</option>
+                <option value="java">Java</option>
+                <option value="csharp">C#</option>
+                <option value="go">Go</option>
+                <option value="rust">Rust</option>
+                <option value="cpp">C++</option>
+                <option value="php">PHP</option>
+                <option value="ruby">Ruby</option>
+            </select>
+        </div>
+
+        <button class="tab-btn" onclick="openTab(event, 'tab-pseudo')">2. Pseudocode</button>
+        <button class="tab-btn" onclick="openTab(event, 'tab-visual')">3. Visual Gist</button>
+
+        <div class="tab-group">
+            <button class="tab-btn" onclick="openTab(event, 'tab-target')">4. Target Language</button>
+            <select id="targetLang" onchange="changeTargetLanguage(this.value)">
+                <option value="javascript">JavaScript</option>
+                <option value="typescript">TypeScript</option>
+                <option value="python">Python</option>
+                <option value="java">Java</option>
+                <option value="csharp">C#</option>
+                <option value="go">Go</option>
+                <option value="rust">Rust</option>
+                <option value="cpp">C++</option>
+                <option value="php">PHP</option>
+                <option value="ruby">Ruby</option>
+            </select>
+        </div>
+    </nav>
+
+    <section id="tab-source" class="tab-content active">
+        <textarea id="codeIn" placeholder="Paste source code here...">
+function processOrder(price) {
+  if (price > 100) {
+    applyDiscount();
+    log("Big Spender");
+  }
+  return price;
+}</textarea>
+    </section>
+
+    <section id="tab-pseudo" class="tab-content">
+        <pre><code id="pseudoOut"></code></pre>
+    </section>
+
+    <section id="tab-visual" class="tab-content">
+        <div id="blocklyDiv"></div>
+    </section>
+
+    <section id="tab-target" class="tab-content">
+        <pre><code id="targetOut"></code></pre>
+    </section>
+</div>
+
+    <footer>
+        <small>Interactive Universal Transformer • Powered by Tree-Sitter & Blockly</small>
+    </footer>
+
+    <script src="transformer.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
