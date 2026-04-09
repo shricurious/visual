@@ -76,19 +76,21 @@ async function init() {
     defineBlocks();
 
     try {
-        // 2. Initialize the core engine. 
-        // By default, it looks for 'tree-sitter.wasm' in the same folder as 'tree-sitter.js'
-        await TreeSitter.init(); 
-        
+        // We must explicitly tell the library the new name of the binary
+        await TreeSitter.init({
+            locateFile(scriptName) {
+                if (scriptName === 'tree-sitter.wasm') {
+                    return 'web-tree-sitter.wasm';
+                }
+                return scriptName;
+            }
+        });
+
         parser = new TreeSitter();
-        
-        // 3. Load your default language
         await loadLanguage('javascript');
         
-        console.log("🚀 Storyteller Engine Online");
     } catch (e) {
-        console.error("Engine failed to start:", e);
-        document.getElementById('status').innerText = "❌ Engine Error";
+        console.error("Engine failed to load with new filenames:", e);
     }
 }
 
