@@ -1,10 +1,3 @@
-/**
- * Universal Code Storyteller
- * © 2026 [Anupam Shrivastava]
- * Built with Blockly (Apache 2.0) and Tree-sitter (MIT)
- */
-
-// 1. We import the class directly from the local file
 import { Parser, Language } from './web-tree-sitter.js';
 
 let parser, workspace;
@@ -12,204 +5,95 @@ let updatedTabs = new Set();
 const WASM_BASE_URL = "./";
 
 async function init() {
-    // 2. Setup Blockly
+    // 1. Setup Blockly
     workspace = Blockly.inject('blocklyDiv', {
-        toolbox: false, 
-        scrollbars: true, 
-        collapse: true, 
-        readOnly: false,
+        toolbox: false, scrollbars: true, collapse: true, readOnly: false,
         move: { scrollbars: true, drag: true, wheel: true }
     });
-    defineBlocks();
-
+    
+    // 2. Initialize Tree-Sitter
     try {
-        // 3. Initialize using the IMPORTED 'Parser'
-        // We don't check window.TreeSitter anymore because we have the module
         await Parser.init({
             locateFile(scriptName) {
-                // Redirects internal search to your local renamed binary
                 if (scriptName === 'tree-sitter.wasm') return 'web-tree-sitter.wasm';
                 return scriptName;
             }
         });
-
-        // 4. Create the Parser Instance using the module reference
-        parser = new Parser(); 
-        
-        // 5. Load your default language
+        parser = new Parser();
         await loadLanguage('javascript');
-        
-        console.log("🚀 Storyteller Engine Ready");
+        console.log("🚀 Engine Ready");
     } catch (e) {
-        console.error("Engine failed to start:", e);
-        const statusEl = document.getElementById('status');
-        if (statusEl) {
-            statusEl.innerText = "❌ Engine Error";
-            statusEl.className = "status-badge error";
-        }
+        console.error("Init failed:", e);
     }
 }
-
-const languageMap = {
-    'javascript': 'tree-sitter-javascript.wasm',
-    'python': 'tree-sitter-python.wasm',
-    'java': 'tree-sitter-java.wasm',
-    'cpp': 'tree-sitter-cpp.wasm',
-    'go': 'tree-sitter-go.wasm',
-    'ruby': 'tree-sitter-ruby.wasm',
-    'rust': 'tree-sitter-rust.wasm',
-    'php': 'tree-sitter-php.wasm',
-    'csharp': 'tree-sitter-c_sharp.wasm',
-    'typescript': 'tree-sitter-typescript.wasm'
-};
 
 async function loadLanguage(langKey) {
-    const statusEl = document.getElementById('status');
-    if (statusEl) {
-        statusEl.innerText = `⏳ Loading ${langKey}...`;
-        statusEl.className = "status-badge loading";
-    }
-
     try {
-        const fileName = languageMap[langKey] || `tree-sitter-${langKey}.wasm`;
-        const url = `${WASM_BASE_URL}${fileName}`;
-        
-        // FIX: Use 'Language' directly instead of 'Parser.Language'
-        const loadedLang = await Language.load(url);
-        
-        parser.setLanguage(loadedLang);
-        
-        if (statusEl) {
-            statusEl.innerText = `✅ ${langKey.toUpperCase()} Ready`;
-            statusEl.className = "status-badge ready";
-        }
+        const url = `${WASM_BASE_URL}tree-sitter-${langKey}.wasm`;
+        const lang = await Language.load(url);
+        parser.setLanguage(lang);
+        document.getElementById('status').innerText = `✅ ${langKey.toUpperCase()}`;
     } catch (e) {
-        console.error(`Could not load ${langKey}:`, e);
-        if (statusEl) {
-            statusEl.innerText = `❌ Missing ${langKey}.wasm`;
-            statusEl.className = "status-badge error";
-        }
+        console.error(e);
     }
 }
 
-/**
- * UI CONTROL FUNCTIONS
- */
-window.changeSourceLanguage = function(val) {
-    loadLanguage(val);
-    const targetSelect = document.getElementById('targetLang');
-    if (targetSelect) targetSelect.value = val;
-    updatedTabs.delete('tab-target');
-};
-
-window.changeTargetLanguage = function(val) {
-    updatedTabs.delete('tab-target');
-    if (document.getElementById('tab-target').classList.contains('active')) {
-        updateSpecificTab('tab-target');
+// Visualizer Routing
+window.changeVisualizer = function(val) {
+    const bDiv = document.getElementById('blocklyDiv');
+    const mDiv = document.getElementById('mermaidDiv');
+    bDiv.style.display = val === 'blockly' ? 'block' : 'none';
+    mDiv.style.display = val === 'mermaid' ? 'block' : 'none';
+    
+    updatedTabs.delete('tab-visual');
+    if (document.getElementById('tab-visual').classList.contains('active')) {
+        updateSpecificTab('tab-visual');
     }
 };
 
 window.openTab = function(evt, tabName) {
-    const contents = document.getElementsByClassName("tab-content");
-    for (let i = 0; i < contents.length; i++) {
-        contents[i].style.display = "none";
-        contents[i].classList.remove("active");
-    }
+    document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(tabName).style.display = 'flex';
+    evt.currentTarget.classList.add('active');
 
-    const buttons = document.getElementsByClassName("tab-btn");
-    for (let i = 0; i < buttons.length; i++) {
-        buttons[i].classList.remove("active");
-    }
-
-    const activeTab = document.getElementById(tabName);
-    if (activeTab) {
-        activeTab.style.display = "flex";
-        activeTab.classList.add("active");
-    }
-    evt.currentTarget.classList.add("active");
-
-    if (!updatedTabs.has(tabName)) {
-        updateSpecificTab(tabName);
-    }
-
-    if (tabName === 'tab-visual') {
+    if (!updatedTabs.has(tabName)) updateSpecificTab(tabName);
+    if (tabName === 'tab-visual' && document.getElementById('visualizerSelect').value === 'blockly') {
         setTimeout(() => Blockly.svgResize(workspace), 50);
     }
 };
 
-/**
- * THE ENGINE: COORDINATES TRANSFORMATIONS
- */
 function updateSpecificTab(tabName) {
-    const codeIn = document.getElementById('codeIn');
-    if (!codeIn || !parser) return;
-
-    const code = codeIn.value;
+    const code = document.getElementById('codeIn').value;
     const tree = parser.parse(code);
+    
+    // STEP 1: Always generate Pseudocode (The Middle-man)
+    const pseudo = generatePseudocode(tree.rootNode);
 
-    switch (tabName) {
-        case 'tab-pseudo':
-            document.getElementById('pseudoOut').innerText = nodeToPseudocode(tree.rootNode);
-            break;
-
-        case 'tab-visual':
-            workspace.clear();
-            const blocks = tree.rootNode.children.map(nodeToBlocklyJSON).filter(b => b);
-            Blockly.serialization.workspaces.load({ "blocks": { "blocks": blocks } }, workspace);
-            break;
-
-        case 'tab-target':
-            if (!updatedTabs.has('tab-visual')) {
-                updateSpecificTab('tab-visual');
-            }
-            generateLanguageOutput();
-            break;
+    if (tabName === 'tab-pseudo') {
+        document.getElementById('pseudoOut').innerText = pseudo;
+    } else if (tabName === 'tab-visual') {
+        const mode = document.getElementById('visualizerSelect').value;
+        if (mode === 'blockly') renderBlocks(pseudo);
+        if (mode === 'mermaid') renderFlowchart(pseudo);
     }
-
     updatedTabs.add(tabName);
 }
 
-function generateLanguageOutput() {
-    const targetLang = document.getElementById('targetLang').value;
-    const targetOut = document.getElementById('targetOut');
-    
-    const generatorMap = {
-        'javascript': javascript.javascriptGenerator,
-        'typescript': javascript.javascriptGenerator,
-        'python': python.pythonGenerator,
-        'php': php.phpGenerator,
-        'dart': dart.dartGenerator,
-        'lua': lua.luaGenerator
-    };
-
-    const gen = generatorMap[targetLang];
-
-    if (gen) {
-        const code = gen.workspaceToCode(workspace);
-        targetOut.innerText = code;
-    } else {
-        targetOut.innerHTML = `
-            <div class="unsupported-msg">
-                <h3>Target Generator Not Ready</h3>
-                <p>We can <strong>Visualize</strong> ${targetLang}, but the <strong>Code Generator</strong> for this language is still in development.</p>
-            </div>
-        `;
-    }
+function renderBlocks(pseudo) {
+    workspace.clear();
+    const blocks = pseudoToBlocklyJSON(pseudo);
+    Blockly.serialization.workspaces.load({ "blocks": { "blocks": blocks } }, workspace);
 }
 
-/**
- * BLOCK DEFINITIONS (Simplified for brevity, keep your full ones)
- */
-function defineBlocks() {
-    // ... [Insert your Blockly.defineBlocksWithJsonArray code here] ...
-    // Note: Use the generator registration logic exactly as you had it
+function renderFlowchart(pseudo) {
+    const chart = pseudoToMermaid(pseudo);
+    const div = document.getElementById('mermaidDiv');
+    div.innerHTML = `<pre class="mermaid">${chart}</pre>`;
+    mermaid.run({ nodes: [div] });
 }
 
-// Global listeners for input
-document.getElementById('codeIn').addEventListener('input', () => {
-    updatedTabs.clear(); 
-    updatedTabs.add('tab-source'); 
-});
+window.changeSourceLanguage = (val) => { loadLanguage(val); updatedTabs.clear(); };
+document.getElementById('codeIn').addEventListener('input', () => updatedTabs.clear());
 
-// Kickoff the async init
 init();
