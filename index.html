@@ -5,49 +5,92 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Universal Code Storyteller</title>
     <link rel="stylesheet" href="styles.css">
-    <script src="https://unpkg.com/blockly/blockly.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
 </head>
 <body>
-    <header>
-        <div class="controls">
-            <select id="sourceLang" onchange="changeSourceLanguage(this.value)">
+
+<header>
+    <div class="brand">
+        <h1>Universal Code Storyteller</h1>
+    </div>
+    <div id="status" class="status-badge">Initializing...</div>
+</header>
+
+<div class="tab-container">
+    <nav class="tabs">
+        <div class="tab-group">
+            <button class="tab-btn active" onclick="openTab(event, 'tab-source')">1. Source</button>
+            <select id="srcLang" onchange="changeSourceLanguage(this.value)">
                 <option value="javascript">JavaScript</option>
+                <option value="typescript">TypeScript</option>
                 <option value="python">Python</option>
                 <option value="java">Java</option>
+                <option value="csharp">C#</option>
+                <option value="go">Go</option>
+                <option value="rust">Rust</option>
                 <option value="cpp">C++</option>
+                <option value="php">PHP</option>
+                <option value="ruby">Ruby</option>
             </select>
-            <select id="visualizerSelect" onchange="changeVisualizer(this.value)">
-                <option value="blockly">Blocks (Blockly)</option>
-                <option value="mermaid">Flowchart (Mermaid)</option>
+        </div>
+
+        <button class="tab-btn" onclick="openTab(event, 'tab-pseudo')">2. Pseudocode</button>
+        <button class="tab-btn" onclick="openTab(event, 'tab-visual')">3. Visual Gist</button>
+
+        <div class="tab-group">
+            <button class="tab-btn" onclick="openTab(event, 'tab-target')">4. Target Language</button>
+            <select id="targetLang" onchange="changeTargetLanguage(this.value)">
+                <option value="javascript">JavaScript</option>
+                <option value="typescript">TypeScript</option>
+                <option value="python">Python</option>
+                <option value="java">Java</option>
+                <option value="csharp">C#</option>
+                <option value="go">Go</option>
+                <option value="rust">Rust</option>
+                <option value="cpp">C++</option>
+                <option value="php">PHP</option>
+                <option value="ruby">Ruby</option>
             </select>
-            <div id="status" class="status-badge">⏳ Initializing...</div>
         </div>
-    </header>
+    </nav>
 
-    <main>
-        <div class="editor-pane">
-            <textarea id="codeIn" placeholder="Paste code here..."></textarea>
-        </div>
+    <section id="tab-source" class="tab-content active">
+        <textarea id="codeIn" placeholder="Paste source code here...">
+function processOrder(price) {
+  if (price > 100) {
+    applyDiscount();
+    log("Big Spender");
+  }
+  return price;
+}</textarea>
+    </section>
 
-        <div class="output-pane">
-            <div class="tabs">
-                <button class="tab-btn active" onclick="openTab(event, 'tab-pseudo')">Pseudocode</button>
-                <button class="tab-btn" onclick="openTab(event, 'tab-visual')">Visualizer</button>
-            </div>
+    <section id="tab-pseudo" class="tab-content">
+        <pre><code id="pseudoOut"></code></pre>
+    </section>
 
-            <div id="tab-pseudo" class="tab-content active">
-                <pre id="pseudoOut"></pre>
-            </div>
+    <section id="tab-visual" class="tab-content">
+        <div id="blocklyDiv"></div>
+    </section>
 
-            <div id="tab-visual" class="tab-content">
-                <div id="blocklyDiv"></div>
-                <div id="mermaidDiv" style="display:none;"></div>
-            </div>
-        </div>
-    </main>
+    <section id="tab-target" class="tab-content">
+        <pre><code id="targetOut"></code></pre>
+    </section>
+</div>
 
-    <script src="transformer.js"></script>
-    <script src="app.js" type="module"></script>
+    <footer>
+        <small>Interactive Universal Transformer • Powered by Tree-Sitter & Blockly</small>
+    </footer>
+
+
+    <script src="https://unpkg.com/blockly/blockly.min.js"></script>
+    
+    <script src="https://unpkg.com/blockly/javascript_compressed.js"></script>
+    <script src="https://unpkg.com/blockly/python_compressed.js"></script>
+    <script src="https://unpkg.com/blockly/php_compressed.js"></script>
+    <script src="https://unpkg.com/blockly/lua_compressed.js"></script>
+    <script src="https://unpkg.com/blockly/dart_compressed.js"></script>
+<script src="transformer.js"></script>
+
+<script src="app.js" type="module"></script>
 </body>
 </html>
