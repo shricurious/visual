@@ -152,17 +152,31 @@ function updateSpecificTab(tabName) {
             document.getElementById('pseudoOut').innerText = nodeToPseudocode(tree.rootNode);
             break;
 
-            case 'tab-visual':
+        case 'tab-visual':
             workspace.clear();
+            // 1. Generate the block list from your transformer
             const blocks = tree.rootNode.children.map(nodeToBlocklyJSON).filter(b => b);
             
-            // FIX: Assign a different Y coordinate to each block so they don't stack
+            // 2. Format each top-level block
             blocks.forEach((block, index) => {
-                block.x = 20;        // Keep them aligned on the left
-                block.y = index * 50; // Spread them out vertically (50px apart)
+                block.x = 20;             // Left alignment
+                block.y = index * 80;      // Vertical spacing (increased to 80px for expanded blocks)
+                block.collapsed = false;   // Ensure the block is expanded
+                
+                // If the block has nested inputs (like an 'if' body), 
+                // ensure they aren't collapsed either
+                if (block.inputs) {
+                    Object.values(block.inputs).forEach(input => {
+                        if (input.block) input.block.collapsed = false;
+                    });
+                }
             });
 
+            // 3. Load into the workspace
             Blockly.serialization.workspaces.load({ "blocks": { "blocks": blocks } }, workspace);
+            
+            // 4. Final layout refresh
+            setTimeout(() => Blockly.svgResize(workspace), 50);
             break;
 
 
