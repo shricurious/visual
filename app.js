@@ -3,6 +3,8 @@
  * © 2026 [Anupam Shrivastava]
  * Built with Blockly (Apache 2.0) and Tree-sitter (MIT)
  */
+import Parser from './web-tree-sitter.js';
+
 let parser, workspace;
 let updatedTabs = new Set();
 const WASM_BASE_URL = "./";
