@@ -5,7 +5,7 @@
  */
 
 // 1. We import the class directly from the local file
-import { Parser } from './web-tree-sitter.js';
+import { Parser, Language } from './web-tree-sitter.js';
 
 let parser, workspace;
 let updatedTabs = new Set();
@@ -71,14 +71,13 @@ async function loadLanguage(langKey) {
     }
 
     try {
-        // Use the filename from the map or fallback to the standard pattern
         const fileName = languageMap[langKey] || `tree-sitter-${langKey}.wasm`;
         const url = `${WASM_BASE_URL}${fileName}`;
         
-        // IMPORTANT: Use Parser.Language, not TreeSitter.Language
-        const Language = await Parser.Language.load(url);
+        // FIX: Use 'Language' directly instead of 'Parser.Language'
+        const loadedLang = await Language.load(url);
         
-        parser.setLanguage(Language);
+        parser.setLanguage(loadedLang);
         
         if (statusEl) {
             statusEl.innerText = `✅ ${langKey.toUpperCase()} Ready`;
