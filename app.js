@@ -152,11 +152,19 @@ function updateSpecificTab(tabName) {
             document.getElementById('pseudoOut').innerText = nodeToPseudocode(tree.rootNode);
             break;
 
-        case 'tab-visual':
+            case 'tab-visual':
             workspace.clear();
             const blocks = tree.rootNode.children.map(nodeToBlocklyJSON).filter(b => b);
+            
+            // FIX: Assign a different Y coordinate to each block so they don't stack
+            blocks.forEach((block, index) => {
+                block.x = 20;        // Keep them aligned on the left
+                block.y = index * 50; // Spread them out vertically (50px apart)
+            });
+
             Blockly.serialization.workspaces.load({ "blocks": { "blocks": blocks } }, workspace);
             break;
+
 
         case 'tab-target':
             if (!updatedTabs.has('tab-visual')) {
