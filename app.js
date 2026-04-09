@@ -6,7 +6,7 @@
 
 let parser, workspace;
 let updatedTabs = new Set();
-const WASM_BASE_URL = "https://unpkg.com/@emmetio/tree-sitter-languages/wasm/";
+const WASM_BASE_URL = "./";
 
 const languageMap = {
     'javascript': 'tree-sitter-javascript.wasm',
@@ -26,30 +26,20 @@ async function loadLanguage(langKey) {
     statusEl.innerText = `⏳ Loading ${langKey}...`;
 
     try {
-        const url = WASM_BASE_URL + languageMap[langKey];
+        // 4. Use the local path. 
+        // Ensure your filenames are exactly 'tree-sitter-javascript.wasm' etc.
+        const url = `${WASM_BASE_URL}tree-sitter-${langKey}.wasm`;
         
-        // Use 'anonymous' credentials mode to satisfy strict CDN policies
-        const response = await fetch(url, {
-            method: 'GET',
-            mode: 'cors',
-            credentials: 'omit' 
-        });
-
-        if (!response.ok) throw new Error(`Could not reach CDN: ${response.status}`);
-        
-        const buffer = await response.arrayBuffer();
-        // Load the binary into the Tree-sitter parser
-        const Language = await TreeSitter.Language.load(new Uint8Array(buffer));
+        // Modern Tree-sitter allows loading directly from a URL string
+        const Language = await TreeSitter.Language.load(url);
         
         parser.setLanguage(Language);
         
         statusEl.innerText = `✅ ${langKey.toUpperCase()} Ready`;
         statusEl.className = "status-badge ready";
-        updatedTabs.clear(); 
     } catch (e) {
-        console.error(`CORS Fail on ${langKey}:`, e);
-        statusEl.innerText = `❌ CDN Blocked: ${langKey}`;
-        statusEl.className = "status-badge error";
+        console.error(`Could not load ${langKey}:`, e);
+        statusEl.innerText = `❌ Missing ${langKey}.wasm`;
     }
 }
 
@@ -86,23 +76,22 @@ async function init() {
     defineBlocks();
 
     try {
-        // 2. Point Core WASM to JSDelivr's reliable CDN
-        await TreeSitter.init({
-            locateFile(scriptName) {
-                return `https://cdn.jsdelivr.net/npm/web-tree-sitter@0.20.3/${scriptName}`;
-            }
-        });
-
+        // 2. Initialize the core engine. 
+        // By default, it looks for 'tree-sitter.wasm' in the same folder as 'tree-sitter.js'
+        await TreeSitter.init(); 
+        
         parser = new TreeSitter();
         
         // 3. Load your default language
         await loadLanguage('javascript');
-
+        
+        console.log("🚀 Storyteller Engine Online");
     } catch (e) {
-        console.error("Tree-sitter Engine Failed:", e);
-        document.getElementById('status').innerText = "❌ Engine Error (CORS)";
+        console.error("Engine failed to start:", e);
+        document.getElementById('status').innerText = "❌ Engine Error";
     }
 }
+
 
 /**
  * REACTIVE LOGIC
