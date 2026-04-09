@@ -201,8 +201,106 @@ function generateLanguageOutput() {
  * BLOCK DEFINITIONS (Simplified for brevity, keep your full ones)
  */
 function defineBlocks() {
-    // ... [Insert your Blockly.defineBlocksWithJsonArray code here] ...
-    // Note: Use the generator registration logic exactly as you had it
+     Blockly.defineBlocksWithJsonArray([
+        { 
+            "type": "procedures_defnoreturn", 
+            "message0": "%1 %2 %3", 
+            "args0": [
+                {"type": "field_label", "name": "NAME"}, 
+                {"type": "input_dummy"}, 
+                {"type": "input_statement", "name": "STACK"}
+            ], 
+            "colour": 290 
+        },
+        { 
+            "type": "controls_if", 
+            "message0": "if %1 do %2", 
+            "args0": [
+                {"type": "input_value", "name": "IF0"}, 
+                {"type": "input_statement", "name": "DO0"}
+            ], 
+            "previousStatement": null, "nextStatement": null, "colour": 210 
+        },
+        { 
+            "type": "variables_set", 
+            "message0": "set %1 to %2", 
+            "args0": [
+                {"type": "field_input", "name": "VAR", "text": "var"}, 
+                {"type": "input_value", "name": "VALUE"}
+            ], 
+            "previousStatement": null, "nextStatement": null, "colour": 330 
+        },
+        { 
+            "type": "return_block", 
+            "message0": "return %1", 
+            "args0": [{"type": "input_value", "name": "VALUE"}],
+            "previousStatement": null, "colour": 120 
+        },
+        { 
+            "type": "text_print", 
+            "message0": "%1", 
+            "args0": [{"type": "input_value", "name": "TEXT"}], 
+            "previousStatement": null, "nextStatement": null, "colour": 160 
+        },
+        { 
+            "type": "text", 
+            "message0": "%1", 
+            "args0": [{"type": "field_input", "name": "TEXT"}], 
+            "output": "String", "colour": 160 
+        }
+    ]);
+
+    const unquote = (val) => val.replace(/^'|'$/g, '');
+    const gens = [
+        { g: javascript.javascriptGenerator, name: 'js' },
+        { g: python.pythonGenerator, name: 'py' },
+        { g: php.phpGenerator, name: 'php' },
+        { g: lua.luaGenerator, name: 'lua' },
+        { g: dart.dartGenerator, name: 'dart' }
+    ];
+
+    // Register simple blocks for ALL languages
+    gens.forEach(({g}) => {
+        // Handle Return
+        g.forBlock['return_block'] = (block) => {
+            const val = unquote(g.valueToCode(block, 'VALUE', 0) || '');
+            return `return ${val};\n`;
+        };
+        // Handle Generic Calls/Lines
+        g.forBlock['text_print'] = (block) => {
+            const code = unquote(g.valueToCode(block, 'TEXT', 0) || '');
+            return `${code};\n`;
+        };
+        // Handle Variables
+        g.forBlock['variables_set'] = (block) => {
+            const val = unquote(g.valueToCode(block, 'VALUE', 0) || 'null');
+            const varName = block.getFieldValue('VAR');
+            return g === python.pythonGenerator ? `${varName} = ${val}\n` : `let ${varName} = ${val};\n`;
+        };
+        // Handle Ifs
+        g.forBlock['controls_if'] = (block) => {
+            const cond = unquote(g.valueToCode(block, 'IF0', 0) || 'true');
+            const branch = g.statementToCode(block, 'DO0');
+            return `if (${cond}) {\n${branch}}\n`;
+        };
+    });
+
+    // Handle Function Parameters (Logic for extracting name/params from our "Gist" label)
+    gens.forEach(({g}) => {
+        g.forBlock['procedures_defnoreturn'] = (block) => {
+            const label = block.getFieldValue('NAME') || "FUNCTION func";
+            // Label is "FUNCTION name(param1, param2) [steps]"
+            const namePart = label.split(' ')[1] || "func";
+            const funcName = namePart.split('(')[0];
+            const params = namePart.includes('(') ? namePart.match(/\(([^)]+)\)/)[1] : "";
+            
+            const branch = g.statementToCode(block, 'STACK') || '  // no logic\n';
+            
+            if (g === python.pythonGenerator) return `def ${funcName}(${params}):\n${branch}\n`;
+            if (g === dart.dartGenerator) return `void ${funcName}(${params}) {\n${branch}}\n`;
+            return `function ${funcName}(${params}) {\n${branch}}\n\n`;
+        };
+    });
 }
 
 // Global listeners for input
