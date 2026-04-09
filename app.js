@@ -3,10 +3,53 @@
  * © 2026 [Anupam Shrivastava]
  * Built with Blockly (Apache 2.0) and Tree-sitter (MIT)
  */
-
 let parser, workspace;
 let updatedTabs = new Set();
 const WASM_BASE_URL = "./";
+
+async function init() {
+    // 1. Setup Blockly (Keep your existing workspace setup)
+    workspace = Blockly.inject('blocklyDiv', {
+        toolbox: false, 
+        scrollbars: true, 
+        collapse: true, 
+        readOnly: false,
+        move: { scrollbars: true, drag: true, wheel: true }
+    });
+    defineBlocks();
+
+    // 2. Detect the Library
+    // Modern web-tree-sitter sometimes uses 'Parser' instead of 'TreeSitter'
+    const TS = window.TreeSitter || window.Parser;
+
+    if (!TS) {
+        console.error("Tree-sitter not found. Ensure web-tree-sitter.js is loaded in index.html");
+        document.getElementById('status').innerText = "❌ Library Missing";
+        return;
+    }
+
+    try {
+        // 3. Initialize with the NEW filename
+        await TS.init({
+            locateFile(scriptName) {
+                // This redirects the search for the engine to your new local file
+                if (scriptName === 'tree-sitter.wasm') return 'web-tree-sitter.wasm';
+                return scriptName;
+            }
+        });
+
+        // 4. Create the Parser Instance
+        parser = new TS(); 
+        
+        // 5. Load your default language (e.g., JavaScript)
+        await loadLanguage('javascript');
+        
+        console.log("🚀 Storyteller Engine Ready");
+    } catch (e) {
+        console.error("Engine failed to start:", e);
+        document.getElementById('status').innerText = "❌ Engine Error";
+    }
+}
 
 const languageMap = {
     'javascript': 'tree-sitter-javascript.wasm',
@@ -65,34 +108,6 @@ function changeTargetLanguage(val) {
     }
 }
 
-/**
- * INITIALIZATION
- */
-async function init() {
-    // 1. Setup Blockly (Keep your existing code)
-    workspace = Blockly.inject('blocklyDiv', {
-        toolbox: false, scrollbars: true, collapse: true, readOnly: false
-    });
-    defineBlocks();
-
-    try {
-        // We must explicitly tell the library the new name of the binary
-        await TreeSitter.init({
-            locateFile(scriptName) {
-                if (scriptName === 'tree-sitter.wasm') {
-                    return 'web-tree-sitter.wasm';
-                }
-                return scriptName;
-            }
-        });
-
-        parser = new TreeSitter();
-        await loadLanguage('javascript');
-        
-    } catch (e) {
-        console.error("Engine failed to load with new filenames:", e);
-    }
-}
 
 
 /**
