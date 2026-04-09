@@ -5,7 +5,7 @@
  */
 
 // 1. We import the class directly from the local file
-import Parser from './web-tree-sitter.js';
+import { Parser } from './web-tree-sitter.js';
 
 let parser, workspace;
 let updatedTabs = new Set();
